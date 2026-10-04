@@ -64,7 +64,15 @@ async def get_user_by_token(db: AsyncSession, token: str):
 
     # 检查token是否存在
     # 检查token是否过期
-    if user_token.expires_at < datetime.datetime.now(datetime.UTC) or not user_token:
+    if not user_token :
+        return None
+
+    expires_at = user_token.expires_at
+
+    if expires_at.tzinfo is None:# 如果没有时区，就补上
+        expires_at = expires_at.replace(tzinfo=datetime.UTC)
+
+    if expires_at <= datetime.datetime.now(datetime.UTC):
         return None
 
     query = select(User).where(User.id == user_token.user_id)
@@ -74,33 +82,39 @@ async def get_user_by_token(db: AsyncSession, token: str):
 
 # 修改用户信息
 async def update_user_by_username(db: AsyncSession, username: str, update_user_data:UserUpdateRequest):
+    # 先检查用户是否存在
+    query_select = select(User).where(User.username == username)
+    result = await db.execute(query_select)
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    # 用户存在再更新用户
     # query = update(User).where(User.username == username).values(# 更新:字段=值)
     # update_user_data是pydantic类型，可以将它先转为字典，然后解包就可以获得字段=值，字段=值的类型
     query = update(User).where(User.username == username).values(
         **update_user_data.model_dump(exclude_unset=True,exclude_none=True)
         )
-    result = await db.execute(query)
+    await db.execute(query)
     await db.commit()
+
+    result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
 
-    if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
-
-    # 更新用户信息
-
-    await db.commit()
-    await db.refresh(user)
     return user
 
 # 更新用户密码
 async def update_password(db: AsyncSession, username: str, new_password: str):
     secure_password = security.get_hash_password(new_password)# 对密码进行加密
-    query = update(User).where(User.username == username).values(
-        password=secure_password
-        )
-    result = await db.execute(query)
-    await db.commit()
 
+    result = await db.execute(
+        select(User)
+        .where(User.username == username)
+    )
     user = result.scalar_one_or_none()
 
+    user.password = secure_password
+
+    await db.commit()
+    await db.refresh(user)
     return user

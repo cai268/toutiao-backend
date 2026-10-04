@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#17191d">
+  <title>头条简报</title>
+  <link rel="stylesheet" href="/web/styles.css?v=20261004-2">
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" async></script>
+  <script src="/web/app.js?v=20261004-2" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="头条简报首页">
+        <span class="brand-mark" aria-hidden="true">头</span>
+        <span class="brand-copy">
+          <strong>头条简报</strong>
+          <small>NEWS DESK</small>
+        </span>
+      </a>
+
+      <nav class="primary-nav" aria-label="主导航">
+        <button class="nav-item is-active" type="button" data-view="news">
+          <i data-lucide="newspaper" aria-hidden="true"></i>
+          <span>新闻页面</span>
+        </button>
+        <button class="nav-item" type="button" data-view="assistant">
+          <i data-lucide="sparkles" aria-hidden="true"></i>
+          <span>AI助手</span>
+        </button>
+        <button class="nav-item" type="button" data-view="profile">
+          <i data-lucide="circle-user-round" aria-hidden="true"></i>
+          <span>我的信息</span>
+        </button>
+      </nav>
+
+      <button class="sidebar-user" id="sidebarUser" type="button">
+        <img id="sidebarAvatar" src="" alt="">
+        <span>
+          <strong id="sidebarName">访客用户</strong>
+          <small id="sidebarStatus">本地模式</small>
+        </span>
+        <i data-lucide="chevron-right" aria-hidden="true"></i>
+      </button>
+    </aside>
+
+    <main class="main-stage">
+      <section class="view is-active" id="view-news" data-view-panel="news">
+        <header class="view-header">
+          <div>
+            <p class="eyebrow">TODAY'S BRIEF</p>
+            <h1>今日新闻</h1>
+          </div>
+          <div class="header-actions">
+            <span class="date-label" id="currentDate"></span>
+            <button class="icon-button" id="refreshNews" type="button" title="刷新新闻" aria-label="刷新新闻">
+              <i data-lucide="refresh-cw" aria-hidden="true"></i>
+            </button>
+          </div>
+        </header>
+
+        <div class="news-toolbar">
+          <label class="search-box" for="newsSearch">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <input id="newsSearch" type="search" placeholder="搜索标题、摘要或作者" autocomplete="off">
+            <kbd>⌘ K</kbd>
+          </label>
+          <button class="search-button" id="searchNews" type="button">搜索</button>
+        </div>
+
+        <div class="category-row" id="categoryRow" aria-label="新闻分类">
+          <div class="chip-skeleton"></div>
+          <div class="chip-skeleton"></div>
+          <div class="chip-skeleton"></div>
+          <div class="chip-skeleton"></div>
+        </div>
+
+        <div class="news-section-head">
+          <div>
+            <h2 id="newsListTitle">全部新闻</h2>
+            <p id="newsListMeta">正在读取最新内容</p>
+          </div>
+          <div class="view-density" aria-label="列表显示方式">
+            <button class="is-active" type="button" data-density="comfortable" title="舒适视图" aria-label="舒适视图">
+              <i data-lucide="rows-3" aria-hidden="true"></i>
+            </button>
+            <button type="button" data-density="compact" title="紧凑视图" aria-label="紧凑视图">
+              <i data-lucide="list" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="news-list" id="newsList" aria-live="polite"></div>
+      </section>
+
+      <section class="view" id="view-assistant" data-view-panel="assistant">
+        <header class="view-header assistant-header">
+          <div>
+            <p class="eyebrow">KNOWLEDGE COPILOT</p>
+            <h1>AI助手</h1>
+          </div>
+          <div class="connection-state">
+            <span class="status-dot"></span>
+            <span id="aiConnectionText">助手已就绪</span>
+          </div>
+        </header>
+
+        <div class="assistant-workspace">
+          <aside class="memory-panel">
+            <div class="memory-head">
+              <div>
+                <h2>对话记忆</h2>
+                <p id="memoryCount">0 个会话</p>
+              </div>
+              <button class="icon-button dark" id="newConversation" type="button" title="新建对话" aria-label="新建对话">
+                <i data-lucide="plus" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <label class="memory-search" for="memorySearch">
+              <i data-lucide="search" aria-hidden="true"></i>
+              <input id="memorySearch" type="search" placeholder="搜索记忆" autocomplete="off">
+            </label>
+
+            <div class="memory-list" id="memoryList" aria-live="polite"></div>
+
+            <div class="memory-note">
+              <i data-lucide="database" aria-hidden="true"></i>
+              <span>会话记录仅与当前账号关联</span>
+            </div>
+          </aside>
+
+          <section class="chat-panel">
+            <header class="chat-toolbar">
+              <div class="conversation-title">
+                <span class="assistant-avatar">
+                  <i data-lucide="bot" aria-hidden="true"></i>
+                </span>
+                <div>
+                  <h2 id="activeConversationTitle">新对话</h2>
+                  <p>选择一种信息检索方式</p>
+                </div>
+              </div>
+
+              <div class="mode-switch" id="modeSwitch" role="group" aria-label="检索方式">
+                <button type="button" data-mode="rag">
+                  <i data-lucide="library-big" aria-hidden="true"></i>
+                  <span>RAG</span>
+                </button>
+                <button type="button" data-mode="web">
+                  <i data-lucide="globe-2" aria-hidden="true"></i>
+                  <span>Web</span>
+                </button>
+                <button class="is-active" type="button" data-mode="auto">
+                  <i data-lucide="wand-sparkles" aria-hidden="true"></i>
+                  <span>Auto</span>
+                </button>
+              </div>
+            </header>
+
+            <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
+
+            <div class="prompt-suggestions" id="promptSuggestions">
+              <button type="button">总结今天的科技新闻</button>
+              <button type="button">查找知识库中的相关背景</button>
+              <button type="button">对比多个来源的信息</button>
+            </div>
+
+            <form class="chat-composer" id="chatForm">
+              <label class="sr-only" for="chatInput">输入问题</label>
+              <textarea id="chatInput" rows="1" placeholder="输入你的问题..." maxlength="2000"></textarea>
+              <button class="send-button" type="submit" title="发送" aria-label="发送">
+                <i data-lucide="arrow-up" aria-hidden="true"></i>
+              </button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-profile" data-view-panel="profile">
+        <header class="view-header">
+          <div>
+            <p class="eyebrow">ACCOUNT CENTER</p>
+            <h1>我的信息</h1>
+          </div>
+          <button class="secondary-button" id="authAction" type="button">
+            <i data-lucide="log-in" aria-hidden="true"></i>
+            <span>登录 / 注册</span>
+          </button>
+        </header>
+
+        <div class="profile-layout">
+          <aside class="profile-summary">
+            <div class="profile-avatar-wrap">
+              <img id="profileAvatar" src="" alt="用户头像">
+              <span class="online-dot" title="当前在线"></span>
+            </div>
+            <h2 id="profileDisplayName">访客用户</h2>
+            <p id="profileUsername">@guest</p>
+            <p class="profile-bio" id="profileBio">登录后可同步收藏、历史记录与 AI 对话记忆。</p>
+            <div class="profile-stats">
+              <div>
+                <strong id="favoriteCount">0</strong>
+                <span>收藏</span>
+              </div>
+              <div>
+                <strong id="historyCount">0</strong>
+                <span>浏览</span>
+              </div>
+              <div>
+                <strong id="memoryStatCount">0</strong>
+                <span>记忆</span>
+              </div>
+            </div>
+          </aside>
+
+          <form class="profile-form" id="profileForm">
+            <div class="form-heading">
+              <div>
+                <h2>个人资料</h2>
+                <p id="profileModeText">当前为本地访客资料</p>
+              </div>
+              <span class="account-badge" id="accountBadge">GUEST</span>
+            </div>
+
+            <div class="form-grid">
+              <label class="field">
+                <span>昵称</span>
+                <input id="nicknameInput" name="nickname" type="text" placeholder="输入昵称" maxlength="30">
+              </label>
+              <label class="field">
+                <span>性别</span>
+                <select id="genderInput" name="gender">
+                  <option value="unknown">未设置</option>
+                  <option value="male">男</option>
+                  <option value="female">女</option>
+                  <option value="other">其他</option>
+                </select>
+              </label>
+              <label class="field field-full">
+                <span>头像地址</span>
+                <input id="avatarInput" name="avatar" type="url" placeholder="https://example.com/avatar.jpg" maxlength="255">
+              </label>
+              <label class="field field-full">
+                <span>个人简介</span>
+                <textarea id="bioInput" name="bio" rows="5" maxlength="160" placeholder="简单介绍一下自己"></textarea>
+                <small><span id="bioCounter">0</span>/160</small>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button class="secondary-button" id="resetProfile" type="button">重置</button>
+              <button class="primary-button" type="submit">
+                <i data-lucide="save" aria-hidden="true"></i>
+                <span>保存资料</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <section class="favorites-section">
+          <header class="favorites-head">
+            <div>
+              <h2>我的收藏</h2>
+              <p id="favoritesMeta">登录后可查看收藏的新闻</p>
+            </div>
+            <button class="icon-button" id="refreshFavorites" type="button" title="刷新收藏" aria-label="刷新收藏">
+              <i data-lucide="refresh-cw" aria-hidden="true"></i>
+            </button>
+          </header>
+          <div class="favorites-list" id="favoritesList" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="article-dialog" id="articleDialog">
+    <div class="dialog-frame">
+      <button class="dialog-close" id="closeArticle" type="button" title="关闭" aria-label="关闭">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+      <div class="article-dialog-body" id="articleDialogBody"></div>
+    </div>
+  </dialog>
+
+  <dialog class="auth-dialog" id="authDialog">
+    <div class="dialog-frame">
+      <button class="dialog-close" id="closeAuth" type="button" title="关闭" aria-label="关闭">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+      <div class="auth-head">
+        <span class="brand-mark" aria-hidden="true">头</span>
+        <h2 id="authTitle">登录账号</h2>
+        <p>同步你的收藏、浏览历史与助手记忆。</p>
+      </div>
+      <div class="auth-tabs" role="tablist">
+        <button class="is-active" type="button" data-auth-mode="login">登录</button>
+        <button type="button" data-auth-mode="register">注册</button>
+      </div>
+      <form id="authForm">
+        <label class="field">
+          <span>用户名</span>
+          <input id="authUsername" type="text" autocomplete="username" required minlength="3">
+        </label>
+        <label class="field">
+          <span>密码</span>
+          <input id="authPassword" type="password" autocomplete="current-password" required minlength="6">
+        </label>
+        <p class="form-message" id="authMessage"></p>
+        <button class="primary-button auth-submit" type="submit">
+          <span id="authSubmitText">登录</span>
+          <i data-lucide="arrow-right" aria-hidden="true"></i>
+        </button>
+      </form>
+    </div>
+  </dialog>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+</body>
+</html>

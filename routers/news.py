@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db_conf import get_db
 from crud.news import (
+    get_news_categories,
     get_news_count,
     get_news_detail as get_news_detail_record,
     get_news_list,
     get_related_news,
 )
-from models.news import News, NewsCategory
 
 
 router = APIRouter(prefix="/api/news", tags=["news"])
@@ -17,31 +16,20 @@ router = APIRouter(prefix="/api/news", tags=["news"])
 # 查询新闻大类
 @router.get("/categories")
 async def get_categories(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(NewsCategory)
-        .order_by(NewsCategory.sort_order, NewsCategory.id)
-        .offset(skip)
-        .limit(limit)
+    categories = await get_news_categories(
+        db=db,
+        skip=skip,
+        limit=limit,
     )
-    categories = result.scalars().all()
 
     return {
         "code": 200,
         "message": "获取新闻分类成功",
-        "data": [
-            {
-                "id": category.id,
-                "name": category.name,
-                "sort_order": category.sort_order,
-                "created_at": category.created_at,
-                "updated_at": category.updated_at,
-            }
-            for category in categories
-        ],
+        "data": categories,
     }
 
 

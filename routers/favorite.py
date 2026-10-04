@@ -66,11 +66,11 @@ async def get_favority_list(
                             )
 
 
-@router.delete('clear')
+@router.delete('/clear')
 async def clear_favorite(user = Depends(auth.get_current_user),
                          db : AsyncSession = Depends(get_db)
                          ):
-    clear_count = clear_favorite_by_userId(user_id=user.id,db=db)
+    clear_count = await clear_favorite_by_userId(user_id=user.id,db=db)
     if not clear_count:
         raise HTTPException(status_code=400,detail="无收藏列表")
 

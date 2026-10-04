@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query,HTTPException
 from schemas.users import UserRequest, UserResponse_data, UserInfoResponse,UserUpdateRequest,UserUpdatePasswordRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 from config.db_conf import get_db
-from crud.users import get_user_by_username, create_user, generate_token,authenticate_user,update_user_by_username
+from crud.users import get_user_by_username, create_user, generate_token,authenticate_user,update_user_by_username,update_password
 from utils.response import success_response
 from utils import auth
 
@@ -19,21 +19,6 @@ async def register_user(userdata: UserRequest,db: AsyncSession = Depends(get_db)
     
     new_user = await create_user(db, userdata.username, userdata.password)
     token = await generate_token(db, new_user.id)
-
-#     return {
-#   "code": 200,
-#   "message": "注册成功",
-#   "data": {
-#     "token": token,
-#     "userInfo": {
-#       "id": new_user.id,
-#       "username": new_user.username,
-#       "bio": new_user.bio,
-#       "avatar": new_user.avatar,
-#       "nickname": new_user.nickname,
-#     }
-#   }
-# }
 
     response_data = UserResponse_data(token=token, userinfo=UserInfoResponse.model_validate(new_user))# 从ORM对象中取值，对应model_config
     return success_response(message="注册成功", data=response_data)
@@ -75,18 +60,18 @@ async def update_user_info(
 
 
 # 修改用户密码
-@router.put('/update_password')
-async def update_user_password(db: AsyncSession = Depends(get_db), user = Depends(auth.get_current_user),update_password: UserUpdatePasswordRequest = Depends()):
+@router.put('/password')
+async def update_user_password(update_passwords: UserUpdatePasswordRequest,db: AsyncSession = Depends(get_db), user = Depends(auth.get_current_user)):
     # 验证旧密码是否正确
-    if not authenticate_user(db,user.username,update_password.old_password):
+    if not await authenticate_user(db,user.username,update_passwords.old_password):
         raise HTTPException(status_code=400, detail="旧密码错误")
 
     # 验证新密码和确认密码是否一致
-    if update_password.new_password != update_password.new_password_confirm:
+    if update_passwords.new_password != update_passwords.new_password_confirm:
         raise HTTPException(status_code=400, detail="新密码和确认密码不一致")
 
     # 更新密码
-    result = await update_password(db, user.username, update_password.new_password)
+    await update_password(db, user.username, update_passwords.new_password)
     # 返回正确值
     return success_response(message="密码更新成功", data={})
 

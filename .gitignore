@@ -8,3 +8,9 @@ wheels/
 
 # Virtual environments
 .venv
+
+# 向量化即记忆数据库
+AI_kb/
+
+# 配置文件
+.env

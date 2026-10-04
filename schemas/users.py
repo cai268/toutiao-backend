@@ -37,7 +37,7 @@ class UserResponse_data(BaseModel):
 # 更新用户信息的模型类
 class UserUpdateRequest(BaseModel):
     nickname: str | None = None
-    avatar: str | None = None
+    avatar: str | None = Field(default=None, max_length=255)
     bio: str | None = None
     gender: str | None = None
 
